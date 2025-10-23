@@ -26,6 +26,11 @@ from util.metric import eval_depth
 from util.utils import init_log
 
 
+'''
+Example usage for multi-modal training:
+python train.py --use-multimodal --use-depth-input --use-radar-input --pretrained-from path/to/checkpoint.pth --save-path ./multimodal_output --freeze-backbone --freeze-epochs 5
+'''
+
 parser = argparse.ArgumentParser(description='Depth Anything V2 for Metric Depth Estimation')
 
 parser.add_argument('--encoder', default='vitl', choices=['vits', 'vitb', 'vitl', 'vitg'])

@@ -395,7 +395,17 @@ def vit_giant2(patch_size=16, num_register_tokens=0, **kwargs):
     return model
 
 
-def DINOv2(model_name):
+def DINOv2(model_name, in_chans=3):
+    """
+    创建DINOv2模型的工厂函数
+    
+    Args:
+        model_name (str): 模型大小，可选 'vits', 'vitb', 'vitl', 'vitg'
+        in_chans (int): 输入通道数，默认为3（RGB），可设置为1（深度图或雷达数据）
+    
+    Returns:
+        DinoVisionTransformer: 初始化的模型实例
+    """
     model_zoo = {
         "vits": vit_small, 
         "vitb": vit_base, 
@@ -406,6 +416,7 @@ def DINOv2(model_name):
     return model_zoo[model_name](
         img_size=518,
         patch_size=14,
+        in_chans=in_chans,  # 添加输入通道参数
         init_values=1.0,
         ffn_layer="mlp" if model_name != "vitg" else "swiglufused",
         block_chunks=0,

@@ -275,3 +275,14 @@ class Crop(object):
             sample["semseg_mask"] = sample["semseg_mask"][h_start: h_end, w_start: w_end]
             
         return sample
+
+# 在transform.py中添加对雷达数据的支持
+def process_radar_data(radar_data, width, height):
+    """处理雷达数据以匹配模型输入需求"""
+    # 根据雷达数据格式调整
+    processed_radar = cv2.resize(
+        radar_data,
+        (width, height),
+        interpolation=cv2.INTER_NEAREST
+    )
+    return processed_radar

@@ -15,11 +15,12 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 
 # 导入多模态数据集类
-from dataset.hypersim import Hypersim, MultiModalHypersim
-from dataset.kitti import KITTI, MultiModalKITTI
-from dataset.vkitti2 import VKITTI2, MultiModalVKITTI2
+from dataset.hypersim import Hypersim
+from dataset.kitti import KITTI
+from dataset.vkitti2 import VKITTI2
+from dataset.radarrgbd import RadarRGBD
 # 导入原始和多模态模型
-from depth_anything_v2.dpt import DepthAnythingV2, MultiModalDepthAnythingV2
+from depth_anything_v2.dpt import DepthAnythingV2
 from util.dist_helper import setup_distributed
 from util.loss import SiLogLoss
 from util.metric import eval_depth
@@ -34,7 +35,8 @@ python train.py --use-multimodal --use-depth-input --use-radar-input --pretraine
 parser = argparse.ArgumentParser(description='Depth Anything V2 for Metric Depth Estimation')
 
 parser.add_argument('--encoder', default='vitl', choices=['vits', 'vitb', 'vitl', 'vitg'])
-parser.add_argument('--dataset', default='hypersim', choices=['hypersim', 'vkitti'])
+parser.add_argument('--dataset', default='hypersim', choices=['hypersim', 'vkitti', 'radarrgbd'])
+parser.add_argument('--data-path', type=str, help='path to dataset')
 parser.add_argument('--img-size', default=518, type=int)
 parser.add_argument('--min-depth', default=0.001, type=float)
 parser.add_argument('--max-depth', default=20, type=float)
@@ -76,19 +78,11 @@ def main():
     
     # 根据参数选择合适的数据集类
     if args.dataset == 'hypersim':
-        if args.use_multimodal:
-            trainset = MultiModalHypersim('dataset/splits/hypersim/train.txt', 'train', size=size,
-                                          use_depth_input=args.use_depth_input, 
-                                          use_radar_input=args.use_radar_input)
-        else:
-            trainset = Hypersim('dataset/splits/hypersim/train.txt', 'train', size=size)
+        trainset = Hypersim('dataset/splits/hypersim/train.txt', 'train', size=size)
     elif args.dataset == 'vkitti':
-        if args.use_multimodal:
-            trainset = MultiModalVKITTI2('dataset/splits/vkitti2/train.txt', 'train', size=size,
-                                         use_depth_input=args.use_depth_input,
-                                         use_radar_input=args.use_radar_input)
-        else:
-            trainset = VKITTI2('dataset/splits/vkitti2/train.txt', 'train', size=size)
+        trainset = VKITTI2('dataset/splits/vkitti2/train.txt', 'train', size=size)
+    elif args.dataset == 'radarrgbd':
+        trainset = RadarRGBD(args.data_path, 'dataset/splits/train.txt', 'train', size=size)
     else:
         raise NotImplementedError
         
@@ -97,19 +91,11 @@ def main():
     
     # 验证集也使用多模态版本
     if args.dataset == 'hypersim':
-        if args.use_multimodal:
-            valset = MultiModalHypersim('dataset/splits/hypersim/val.txt', 'val', size=size,
-                                        use_depth_input=args.use_depth_input,
-                                        use_radar_input=args.use_radar_input)
-        else:
-            valset = Hypersim('dataset/splits/hypersim/val.txt', 'val', size=size)
+        valset = Hypersim('dataset/splits/hypersim/val.txt', 'val', size=size)
     elif args.dataset == 'vkitti':
-        if args.use_multimodal:
-            valset = MultiModalKITTI('dataset/splits/kitti/val.txt', 'val', size=size,
-                                     use_depth_input=args.use_depth_input,
-                                     use_radar_input=args.use_radar_input)
-        else:
-            valset = KITTI('dataset/splits/kitti/val.txt', 'val', size=size)
+        valset = KITTI('dataset/splits/kitti/val.txt', 'val', size=size)
+    elif args.dataset == 'radarrgbd':
+        valset = RadarRGBD(args.data_path, 'dataset/splits/val.txt', 'val', size=size)
     else:
         raise NotImplementedError
         
